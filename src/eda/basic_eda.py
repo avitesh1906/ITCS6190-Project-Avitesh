@@ -1,3 +1,6 @@
+
+import csv
+import os
 from pyspark.sql import SparkSession
 from pyspark.sql.window import Window
 from pyspark.sql.functions import (
@@ -220,15 +223,29 @@ def build_eda_outputs(df):
     }
 
 
-def write_eda_outputs(outputs, output_path: str):
+def write_eda_outputs(outputs, output_path):
+    os.makedirs(output_path, exist_ok=True)
+
     for name, output_df in outputs.items():
-        output_df.coalesce(1).write.mode("overwrite").option("header", True).csv(f"{output_path}/{name}")
+        file_path = os.path.join(output_path, f"{name}.csv")
+
+        rows = output_df.collect()
+        columns = output_df.columns
+
+        with open(file_path, mode="w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(columns)
+
+            for row in rows:
+                writer.writerow([row[column] for column in columns])
+
+        print(f"Wrote output: {file_path}")
 
 
 def main():
     spark = create_spark_session()
 
-    input_path = "data/raw/*.parquet"
+    input_path = "data/raw/yellow_tripdata_2024-01.parquet"
     output_path = "outputs/eda"
 
     df = spark.read.parquet(input_path)
