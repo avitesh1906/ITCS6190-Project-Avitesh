@@ -20,9 +20,12 @@ data/raw/
 
 ## 3. Validate Ingestion
 
-```bash
+## Run Data Ingestion
+
+Default run using the local January 2024 Yellow Taxi file:
+
+```powershell
 python src/ingestion/load_taxi_data.py
-```
 
 The script prints the Spark schema, row count, and sample records.
 
