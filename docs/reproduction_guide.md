@@ -31,9 +31,12 @@ The script prints the Spark schema, row count, and sample records.
 
 ## 4. Run EDA
 
-```bash
+## Run EDA
+
+Default run using the local January 2024 Yellow Taxi file:
+
+```powershell
 python src/eda/basic_eda.py
-```
 
 The script writes aggregated CSV output directories under:
 

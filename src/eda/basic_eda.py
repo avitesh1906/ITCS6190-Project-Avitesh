@@ -1,6 +1,6 @@
-
 import csv
 import os
+import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.window import Window
 from pyspark.sql.functions import (
@@ -20,7 +20,8 @@ from pyspark.sql.functions import (
     col,
     round as spark_round,
 )
-
+DEFAULT_INPUT_PATH = "data/raw/yellow_tripdata_2024-01.parquet"
+DEFAULT_OUTPUT_PATH = "outputs/eda"
 
 def create_spark_session(app_name: str = "NYC Taxi EDA") -> SparkSession:
     return (
@@ -245,8 +246,11 @@ def write_eda_outputs(outputs, output_path):
 def main():
     spark = create_spark_session()
 
-    input_path = "data/raw/yellow_tripdata_2024-01.parquet"
-    output_path = "outputs/eda"
+    input_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_INPUT_PATH
+    output_path = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_OUTPUT_PATH
+
+    print(f"Reading taxi data from: {input_path}")
+    print(f"Writing EDA outputs to: {output_path}")
 
     df = spark.read.parquet(input_path)
     eda_df = add_eda_columns(df)
