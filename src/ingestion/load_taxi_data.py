@@ -43,7 +43,7 @@ def print_dataset_summary(df):
 if __name__ == "__main__":
     spark = create_spark_session()
 
-    input_path = "data/raw/*.parquet"
+    input_path = "data/raw/yellow_tripdata_2024-01.parquet"
     taxi_df = load_taxi_parquet(spark, input_path)
 
     print_dataset_summary(taxi_df)

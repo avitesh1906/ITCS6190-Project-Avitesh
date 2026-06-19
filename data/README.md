@@ -9,3 +9,6 @@ The raw Parquet files should be downloaded manually and placed under:
 
 ```text
 data/raw/
+```
+
+Do not commit raw Parquet files or generated CSV outputs. The TLC monthly files are large and are ignored by `.gitignore`.
