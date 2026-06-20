@@ -33,3 +33,13 @@ Charts are generated locally under:
 
 ```text
 outputs/charts/
+
+
+## Links to Supporting Documentation
+
+- Dataset overview: `docs/dataset_overview.md`
+- Methodology: `docs/methodology.md`
+- ML results: `docs/ml_results.md`
+- Streaming simulation: `docs/streaming_simulation.md`
+- Limitations: `docs/limitations.md`
+- Reproduction guide: `docs/reproduction_guide.md`
