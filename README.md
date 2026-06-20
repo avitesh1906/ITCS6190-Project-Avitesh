@@ -36,3 +36,17 @@ After downloading the NYC TLC Yellow Taxi Parquet file into `data/raw/`, the bat
 
 ```bash
 bash run.sh
+
+
+## Final Documentation
+
+Final project documentation is available under `/docs/`:
+
+- `docs/dataset_overview.md`
+- `docs/methodology.md`
+- `docs/results.md`
+- `docs/ml_results.md`
+- `docs/streaming_simulation.md`
+- `docs/limitations.md`
+- `docs/reproduction_guide.md`
+- `docs/final_report.md`
