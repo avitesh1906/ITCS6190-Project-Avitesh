@@ -273,3 +273,10 @@ The following should not be committed:
 * local temporary files
 
 Only source code, documentation, and reproducibility instructions should be committed.
+
+## One-Command Pipeline Execution
+
+### Windows PowerShell
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run.ps1

@@ -30,3 +30,9 @@ EDA outputs are written locally under:
 ```text
 outputs/eda/
 ```
+## One-Command Pipeline Execution
+
+After downloading the NYC TLC Yellow Taxi Parquet file into `data/raw/`, the batch pipeline can be executed with:
+
+```bash
+bash run.sh
