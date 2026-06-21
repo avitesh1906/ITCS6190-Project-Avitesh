@@ -10,14 +10,14 @@ from pyspark.sql.functions import (
     when,
 )
 
-
 DEFAULT_ROWS_PER_SECOND = 5
 
 
-def create_spark_session(app_name: str = "NYC Taxi Structured Streaming Simulation") -> SparkSession:
+def create_spark_session(
+    app_name: str = "NYC Taxi Structured Streaming Simulation",
+) -> SparkSession:
     return (
-        SparkSession.builder
-        .appName(app_name)
+        SparkSession.builder.appName(app_name)
         .config("spark.sql.shuffle.partitions", "4")
         .getOrCreate()
     )
@@ -35,24 +35,19 @@ def build_simulated_taxi_stream(spark: SparkSession, rows_per_second: int):
     like incoming NYC taxi trip events.
     """
     rate_df = (
-        spark.readStream
-        .format("rate")
-        .option("rowsPerSecond", rows_per_second)
-        .load()
+        spark.readStream.format("rate").option("rowsPerSecond", rows_per_second).load()
     )
 
     taxi_stream_df = (
-        rate_df
-        .withColumn("pickup_hour", hour(col("timestamp")))
+        rate_df.withColumn("pickup_hour", hour(col("timestamp")))
         .withColumn("trip_distance", ((col("value") % 20) + 1).cast("double"))
         .withColumn("passenger_count", ((col("value") % 4) + 1).cast("integer"))
         .withColumn("fare_amount", (col("trip_distance") * 3.25 + 5.00))
         .withColumn(
             "tip_amount",
-            when(
-                col("value") % 3 == 0,
-                col("fare_amount") * 0.20
-            ).otherwise(col("fare_amount") * 0.12)
+            when(col("value") % 3 == 0, col("fare_amount") * 0.20).otherwise(
+                col("fare_amount") * 0.12
+            ),
         )
         .withColumn("total_amount", col("fare_amount") + col("tip_amount"))
         .withColumn("PULocationID", ((col("value") % 260) + 1).cast("integer"))
@@ -80,8 +75,7 @@ def process_micro_batch(batch_df, batch_id: int):
         return
 
     summary_df = (
-        batch_df
-        .groupBy("pickup_hour")
+        batch_df.groupBy("pickup_hour")
         .agg(
             count("*").alias("trip_count"),
             spark_round(avg("fare_amount"), 2).alias("avg_fare_amount"),
@@ -105,8 +99,7 @@ def main():
     taxi_stream_df = build_simulated_taxi_stream(spark, rows_per_second)
 
     query = (
-        taxi_stream_df.writeStream
-        .foreachBatch(process_micro_batch)
+        taxi_stream_df.writeStream.foreachBatch(process_micro_batch)
         .outputMode("append")
         .trigger(processingTime="10 seconds")
         .start()

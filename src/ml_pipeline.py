@@ -16,15 +16,15 @@ from pyspark.sql.functions import (
     when,
 )
 
-
 DEFAULT_INPUT_PATH = "data/raw/yellow_tripdata_2024-01.parquet"
 DEFAULT_OUTPUT_PATH = "outputs/ml"
 
 
-def create_spark_session(app_name: str = "NYC Taxi MLlib Fare Prediction") -> SparkSession:
+def create_spark_session(
+    app_name: str = "NYC Taxi MLlib Fare Prediction",
+) -> SparkSession:
     return (
-        SparkSession.builder
-        .appName(app_name)
+        SparkSession.builder.appName(app_name)
         .config("spark.sql.shuffle.partitions", "8")
         .getOrCreate()
     )
@@ -52,15 +52,15 @@ def prepare_features(df):
     - payment_type
     """
     prepared_df = (
-        df
-        .withColumn("pickup_hour", hour(col("tpep_pickup_datetime")))
+        df.withColumn("pickup_hour", hour(col("tpep_pickup_datetime")))
         .withColumn("pickup_day_of_week", dayofweek(col("tpep_pickup_datetime")))
         .withColumn(
             "trip_duration_minutes",
             (
                 unix_timestamp(col("tpep_dropoff_datetime"))
                 - unix_timestamp(col("tpep_pickup_datetime"))
-            ) / 60,
+            )
+            / 60,
         )
         .select(
             "trip_distance",
@@ -77,8 +77,7 @@ def prepare_features(df):
 
     # Basic data quality filters to remove invalid or extreme records.
     prepared_df = (
-        prepared_df
-        .filter(col("total_amount").isNotNull())
+        prepared_df.filter(col("total_amount").isNotNull())
         .filter(col("trip_distance").isNotNull())
         .filter(col("passenger_count").isNotNull())
         .filter(col("trip_duration_minutes").isNotNull())
@@ -190,12 +189,14 @@ def write_metrics(results, output_path: str):
         writer.writeheader()
 
         for result in results:
-            writer.writerow({
-                "model_name": result["model_name"],
-                "rmse": result["rmse"],
-                "mae": result["mae"],
-                "r2": result["r2"],
-            })
+            writer.writerow(
+                {
+                    "model_name": result["model_name"],
+                    "rmse": result["rmse"],
+                    "mae": result["mae"],
+                    "r2": result["r2"],
+                }
+            )
 
     print(f"Wrote ML metrics to: {output_file}")
 

@@ -4,7 +4,6 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 DEFAULT_EDA_OUTPUT_PATH = "outputs/eda"
 DEFAULT_CHART_OUTPUT_PATH = "outputs/charts"
 
