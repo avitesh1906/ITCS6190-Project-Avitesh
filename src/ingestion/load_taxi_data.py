@@ -2,13 +2,17 @@ import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, to_timestamp
 
+
 DEFAULT_INPUT_PATH = "data/raw/yellow_tripdata_2024-01.parquet"
 
 
 def create_spark_session(app_name: str = "NYC Taxi Data Ingestion") -> SparkSession:
     return (
-        SparkSession.builder.appName(app_name)
+        SparkSession.builder
+        .appName("IT61-6190 Final Project")
         .config("spark.sql.shuffle.partitions", "8")
+        .config("spark.sql.adaptive.enabled", "true")
+        .config("spark.default.parallelism", "8")
         .getOrCreate()
     )
 
@@ -17,11 +21,15 @@ def load_taxi_parquet(spark: SparkSession, input_path: str):
     df = spark.read.parquet(input_path)
 
     if "tpep_pickup_datetime" in df.columns:
-        df = df.withColumn("pickup_datetime", to_timestamp(col("tpep_pickup_datetime")))
+        df = df.withColumn(
+            "pickup_datetime",
+            to_timestamp(col("tpep_pickup_datetime"))
+        )
 
     if "tpep_dropoff_datetime" in df.columns:
         df = df.withColumn(
-            "dropoff_datetime", to_timestamp(col("tpep_dropoff_datetime"))
+            "dropoff_datetime",
+            to_timestamp(col("tpep_dropoff_datetime"))
         )
 
     return df
