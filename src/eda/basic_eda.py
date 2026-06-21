@@ -20,13 +20,14 @@ from pyspark.sql.functions import (
     col,
     round as spark_round,
 )
+
 DEFAULT_INPUT_PATH = "data/raw/yellow_tripdata_2024-01.parquet"
 DEFAULT_OUTPUT_PATH = "outputs/eda"
 
+
 def create_spark_session(app_name: str = "NYC Taxi EDA") -> SparkSession:
     return (
-        SparkSession.builder
-        .appName(app_name)
+        SparkSession.builder.appName(app_name)
         .config("spark.sql.shuffle.partitions", "8")
         .getOrCreate()
     )
@@ -39,11 +40,17 @@ def add_eda_columns(df):
         .withColumn("pickup_month", month(col("tpep_pickup_datetime")))
         .withColumn(
             "trip_duration_minutes",
-            (unix_timestamp(col("tpep_dropoff_datetime")) - unix_timestamp(col("tpep_pickup_datetime"))) / 60,
+            (
+                unix_timestamp(col("tpep_dropoff_datetime"))
+                - unix_timestamp(col("tpep_pickup_datetime"))
+            )
+            / 60,
         )
         .withColumn(
             "tip_percentage",
-            when(col("fare_amount") > 0, (col("tip_amount") / col("fare_amount")) * 100).otherwise(None),
+            when(
+                col("fare_amount") > 0, (col("tip_amount") / col("fare_amount")) * 100
+            ).otherwise(None),
         )
         .withColumn(
             "avg_mph",
@@ -74,8 +81,11 @@ def add_eda_columns(df):
         )
         .withColumn(
             "airport_trip_type",
-            when((col("PULocationID").isin(132, 138)) | (col("DOLocationID").isin(132, 138)), "airport_related")
-            .otherwise("non_airport"),
+            when(
+                (col("PULocationID").isin(132, 138))
+                | (col("DOLocationID").isin(132, 138)),
+                "airport_related",
+            ).otherwise("non_airport"),
         )
         .withColumn(
             "tip_band",
@@ -101,18 +111,20 @@ def build_eda_outputs(df):
         .orderBy("pickup_hour")
     )
 
-    fare_distance_summary = (
-        valid_df.agg(
-            count("*").alias("total_trips"),
-            spark_round(avg("fare_amount"), 2).alias("avg_fare"),
-            spark_round(avg("trip_distance"), 2).alias("avg_trip_distance"),
-            spark_round(avg("trip_duration_minutes"), 2).alias("avg_trip_duration_minutes"),
-            spark_round(avg("tip_percentage"), 2).alias("avg_tip_percentage"),
-            spark_round(avg("avg_mph"), 2).alias("avg_mph"),
-            spark_round(stddev("total_amount"), 2).alias("stddev_total_amount"),
-            spark_round(percentile_approx("total_amount", 0.5), 2).alias("median_total_amount"),
-            spark_round(percentile_approx("trip_distance", 0.95), 2).alias("p95_trip_distance"),
-        )
+    fare_distance_summary = valid_df.agg(
+        count("*").alias("total_trips"),
+        spark_round(avg("fare_amount"), 2).alias("avg_fare"),
+        spark_round(avg("trip_distance"), 2).alias("avg_trip_distance"),
+        spark_round(avg("trip_duration_minutes"), 2).alias("avg_trip_duration_minutes"),
+        spark_round(avg("tip_percentage"), 2).alias("avg_tip_percentage"),
+        spark_round(avg("avg_mph"), 2).alias("avg_mph"),
+        spark_round(stddev("total_amount"), 2).alias("stddev_total_amount"),
+        spark_round(percentile_approx("total_amount", 0.5), 2).alias(
+            "median_total_amount"
+        ),
+        spark_round(percentile_approx("trip_distance", 0.95), 2).alias(
+            "p95_trip_distance"
+        ),
     )
 
     top_pickup_locations = (
@@ -138,18 +150,24 @@ def build_eda_outputs(df):
         .orderBy("payment_type")
     )
 
-    data_quality_summary = (
-        df.agg(
-            count("*").alias("raw_trips"),
-            spark_sum(when(col("is_valid_trip"), 1).otherwise(0)).alias("valid_trips"),
-            spark_sum(when(~col("is_valid_trip"), 1).otherwise(0)).alias("invalid_trips"),
-            spark_sum(when(col("trip_distance") <= 0, 1).otherwise(0)).alias("non_positive_distance_trips"),
-            spark_sum(when(col("fare_amount") <= 0, 1).otherwise(0)).alias("non_positive_fare_trips"),
-            spark_sum(when(col("trip_duration_minutes") <= 0, 1).otherwise(0)).alias("non_positive_duration_trips"),
-            spark_sum(when(col("trip_duration_minutes") > 24 * 60, 1).otherwise(0)).alias("over_24_hour_trips"),
-            spark_min("tpep_pickup_datetime").alias("min_pickup_datetime"),
-            spark_max("tpep_pickup_datetime").alias("max_pickup_datetime"),
-        )
+    data_quality_summary = df.agg(
+        count("*").alias("raw_trips"),
+        spark_sum(when(col("is_valid_trip"), 1).otherwise(0)).alias("valid_trips"),
+        spark_sum(when(~col("is_valid_trip"), 1).otherwise(0)).alias("invalid_trips"),
+        spark_sum(when(col("trip_distance") <= 0, 1).otherwise(0)).alias(
+            "non_positive_distance_trips"
+        ),
+        spark_sum(when(col("fare_amount") <= 0, 1).otherwise(0)).alias(
+            "non_positive_fare_trips"
+        ),
+        spark_sum(when(col("trip_duration_minutes") <= 0, 1).otherwise(0)).alias(
+            "non_positive_duration_trips"
+        ),
+        spark_sum(when(col("trip_duration_minutes") > 24 * 60, 1).otherwise(0)).alias(
+            "over_24_hour_trips"
+        ),
+        spark_min("tpep_pickup_datetime").alias("min_pickup_datetime"),
+        spark_max("tpep_pickup_datetime").alias("max_pickup_datetime"),
     )
 
     day_hour_revenue = (
@@ -179,22 +197,34 @@ def build_eda_outputs(df):
         .agg(
             count("*").alias("trip_count"),
             spark_round(avg("trip_distance"), 2).alias("avg_trip_distance"),
-            spark_round(avg("trip_duration_minutes"), 2).alias("avg_trip_duration_minutes"),
+            spark_round(avg("trip_duration_minutes"), 2).alias(
+                "avg_trip_duration_minutes"
+            ),
             spark_round(avg("total_amount"), 2).alias("avg_total_amount"),
             spark_round(avg("tip_percentage"), 2).alias("avg_tip_percentage"),
         )
         .orderBy("airport_trip_type")
     )
 
-    fare_outlier_profile = (
-        valid_df.select(
-            spark_round(percentile_approx("total_amount", 0.5), 2).alias("median_total_amount"),
-            spark_round(percentile_approx("total_amount", 0.9), 2).alias("p90_total_amount"),
-            spark_round(percentile_approx("total_amount", 0.95), 2).alias("p95_total_amount"),
-            spark_round(percentile_approx("total_amount", 0.99), 2).alias("p99_total_amount"),
-            spark_round(percentile_approx("trip_distance", 0.99), 2).alias("p99_trip_distance"),
-            spark_round(percentile_approx("trip_duration_minutes", 0.99), 2).alias("p99_trip_duration_minutes"),
-        )
+    fare_outlier_profile = valid_df.select(
+        spark_round(percentile_approx("total_amount", 0.5), 2).alias(
+            "median_total_amount"
+        ),
+        spark_round(percentile_approx("total_amount", 0.9), 2).alias(
+            "p90_total_amount"
+        ),
+        spark_round(percentile_approx("total_amount", 0.95), 2).alias(
+            "p95_total_amount"
+        ),
+        spark_round(percentile_approx("total_amount", 0.99), 2).alias(
+            "p99_total_amount"
+        ),
+        spark_round(percentile_approx("trip_distance", 0.99), 2).alias(
+            "p99_trip_distance"
+        ),
+        spark_round(percentile_approx("trip_duration_minutes", 0.99), 2).alias(
+            "p99_trip_duration_minutes"
+        ),
     )
 
     tip_band_by_payment_type = (
@@ -205,7 +235,11 @@ def build_eda_outputs(df):
         )
         .withColumn(
             "share_of_payment_type",
-            spark_round(col("trip_count") / spark_sum("trip_count").over(Window.partitionBy("payment_type")), 4),
+            spark_round(
+                col("trip_count")
+                / spark_sum("trip_count").over(Window.partitionBy("payment_type")),
+                4,
+            ),
         )
         .orderBy("payment_type", "tip_band")
     )
