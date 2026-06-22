@@ -18,7 +18,10 @@ def create_spark_session(
 ) -> SparkSession:
     return (
         SparkSession.builder.appName(app_name)
-        .config("spark.sql.shuffle.partitions", "4")
+        .config("spark.sql.shuffle.partitions", "5")
+        .config("spark.default.parallelism", "5")
+        .config("spark.sql.adaptive.enabled", "true")
+        .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
         .getOrCreate()
     )
 
