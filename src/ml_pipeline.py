@@ -221,6 +221,7 @@ def main():
     if total_rows == 0:
         raise ValueError("No rows available after ML feature preparation filters.")
 
+    # splitting total dataset into training and test dataset
     training_df, test_df = prepared_df.randomSplit([0.8, 0.2], seed=42)
 
     training_count = training_df.count()
